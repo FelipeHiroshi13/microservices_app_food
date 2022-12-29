@@ -7,14 +7,14 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
-public interface OrderFoodRespository extends JpaRepository<OrderFood, Long> {
+public interface OrderFoodRepository extends JpaRepository<OrderFood, Long> {
 
     @Transactional
     @Modifying(clearAutomatically = true)
-    @Query("update order_food p set p.status = :status where p = :order")
+    @Query("update OrderFood p set p.status = :status where p = :orderFood")
     void udpateStatus(Status status, OrderFood orderFood);
 
-    @Query(value = "SELECT p from order_food p LEFT JOIN FETCH p.items where p.id = :id")
-    OrderFood petIdbyItems(Long id);
+    @Query(value = "SELECT p from OrderFood p LEFT JOIN FETCH p.items where p.id = :id")
+    OrderFood getItemById(Long id);
 
 }

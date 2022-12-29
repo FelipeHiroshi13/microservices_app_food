@@ -4,6 +4,7 @@ import br.com.food.Payments.dto.PaymentDTO;
 import br.com.food.Payments.dto.PaymentRegisterDTO;
 import br.com.food.Payments.dto.PaymentUpdateDTO;
 import br.com.food.Payments.service.PaymentService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,8 +50,8 @@ public class PaymentController {
     @PutMapping("/{id}")
     @Transactional
     public ResponseEntity<PaymentDTO> atualizar(@PathVariable @NotNull Long id, @RequestBody @Valid PaymentUpdateDTO dto) {
-        PaymentDTO atualizado = service.update(dto);
-        return ResponseEntity.ok(atualizado);
+        PaymentDTO updated = service.update(dto);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
@@ -58,6 +59,12 @@ public class PaymentController {
     public ResponseEntity<PaymentDTO> remove(@PathVariable @NotNull Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/confirm")
+    @CircuitBreaker(name="updateOrder", fallbackMethod = "")
+    public void confirmShipp(@PathVariable @NotNull Long id){
+        service.confirmShipp(id);
     }
 
 }
