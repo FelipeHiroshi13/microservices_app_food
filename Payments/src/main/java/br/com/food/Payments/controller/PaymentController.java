@@ -7,6 +7,7 @@ import br.com.food.Payments.service.PaymentService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,9 @@ public class PaymentController {
     private PaymentService service;
 
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
     @GetMapping
     public Page<PaymentDTO> listar(@PageableDefault(size = 10) Pageable pagination) {
         return service.list(pagination);
@@ -44,12 +48,14 @@ public class PaymentController {
         PaymentDTO payment = service.register(dto);
         URI uri = uriBuilder.path("/payments/{id}").buildAndExpand(payment.id()).toUri();
 
+        rabbitTemplate.convertAndSend("payments.ex","", payment);
+
         return ResponseEntity.created(uri).body(payment);
     }
 
     @PutMapping("/{id}")
     @Transactional
-    public ResponseEntity<PaymentDTO> atualizar(@PathVariable @NotNull Long id, @RequestBody @Valid PaymentUpdateDTO dto) {
+    public ResponseEntity<PaymentDTO> update(@PathVariable @NotNull Long id, @RequestBody @Valid PaymentUpdateDTO dto) {
         PaymentDTO updated = service.update(dto);
         return ResponseEntity.ok(updated);
     }
